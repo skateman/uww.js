@@ -1,0 +1,20 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.vite/
+.playwright-mcp/
+examples/models/
+# Generated WASM artifact — built in CI from
+# wasm/src + the upstream sources fetched by scripts/build-wasm.mjs.
+# Included in the npm package via prepublishOnly. Run
+# `npm run build:wasm` locally to regenerate (requires Docker).
+src/_wasm/uww-frontend.js
+src/_wasm/uww-frontend.js.map
+src/_wasm/uww-frontend.d.ts
+src/_wasm/upstream-version.txt
+# Cached upstream tarballs + extracted sources.
+wasm/.cache/
+# Test artifacts dropped at repo root for ad-hoc debugging
+/*.wav
+/*.tflite

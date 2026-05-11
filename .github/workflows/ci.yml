@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Runs on every push and PR. Builds the WASM, typechecks, bundles,
+  # and smoke-tests the WASM in Node. No publishing.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm ci
+      - run: npm run build:wasm
+        env:
+          EMSCRIPTEN_IMAGE: emscripten/emsdk:latest
+      - run: npm run typecheck
+      - run: npm run build
+      - name: WASM smoke test
+        run: |
+          node --input-type=module -e "
+            import { readFileSync } from 'node:fs';
+            import createModule from './src/_wasm/uww-frontend.js';
+            const M = await createModule();
+            if (M._uww_frontend_feature_size() !== 40) throw new Error('feature_size != 40');
+            if (M._uww_frontend_step_ms() !== 10) throw new Error('step_ms != 10');
+            const h = M._uww_frontend_create(16000);
+            if (!h) throw new Error('create returned null');
+            M._uww_frontend_destroy(h);
+            const v = readFileSync('src/_wasm/upstream-version.txt', 'utf8').trim();
+            console.log('WASM smoke test OK against pymicro-features v' + v);
+          "
+
+  # Runs only on push to main, after verify. Publishes to npm only if
+  # the current package.json version isn't already published. To release
+  # a new version: bump `version` in package.json on a PR, merge to main.
+  release:
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # for npm provenance
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      # Compare package.json version against what's on the npm registry.
+      # The published version is exactly `version` from package.json — no
+      # mangling. To release a new upstream pymicro-features version,
+      # bump our own `version` and merge.
+      - name: Check if version is unpublished
+        id: check
+        run: |
+          BASE=$(node -p "require('./package.json').version")
+          echo "Local version: $BASE"
+          if npm view "uww@${BASE}" version --json 2>/dev/null | grep -q '.'; then
+            echo "::notice::Version $BASE already on npm — skipping publish"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Version $BASE is new — will publish"
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.check.outputs.publish == 'true'
+        run: npm ci
+
+      # `npm publish` triggers prepublishOnly which:
+      #   1. build:wasm    (downloads latest pymicro-features → emcc in Docker)
+      #   2. build         (tsup → dist/)
+      # The published `version` is exactly what's in package.json.
+      # Which upstream pymicro-features release we built against is
+      # logged in the CI output and shipped inside the package as
+      # src/_wasm/upstream-version.txt.
+      - if: steps.check.outputs.publish == 'true'
+        run: |
+          npm publish --provenance --access public
+          echo "::notice::Published $(node -p \"require('./package.json').name + '@' + require('./package.json').version\") built against pymicro-features v$(cat src/_wasm/upstream-version.txt)"
+        env:
+          EMSCRIPTEN_IMAGE: emscripten/emsdk:latest
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

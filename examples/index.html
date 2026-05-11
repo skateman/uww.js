@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>uww.js demo</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      }
+      body {
+        max-width: 640px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        line-height: 1.5;
+      }
+      fieldset {
+        border: 1px solid #8884;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      label {
+        display: block;
+        margin: 0.5rem 0 0.25rem;
+        font-weight: 600;
+      }
+      input[type='url'],
+      input[type='file'],
+      input[type='number'] {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .row {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+      }
+      .row > * {
+        flex: 1;
+      }
+      button {
+        padding: 0.6rem 1rem;
+        font-size: 1rem;
+        border-radius: 6px;
+        border: 1px solid #8886;
+        cursor: pointer;
+        background: #0a84ff;
+        color: white;
+      }
+      button[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      button.secondary {
+        background: transparent;
+        color: inherit;
+      }
+      .meter {
+        height: 24px;
+        background: #8882;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+      }
+      .meter > .bar {
+        height: 100%;
+        background: linear-gradient(90deg, #0a84ff, #ff375f);
+        width: 0%;
+        transition: width 0.05s linear;
+      }
+      .meter > .threshold {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #fff8;
+      }
+      #log {
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 0.85rem;
+        white-space: pre-wrap;
+        max-height: 200px;
+        overflow: auto;
+        background: #8881;
+        padding: 0.5rem;
+        border-radius: 4px;
+      }
+      .pulse {
+        animation: pulse 0.6s ease-out;
+      }
+      @keyframes pulse {
+        0% { background: #34c759; }
+        100% { background: transparent; }
+      }
+      .source-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 0.5rem;
+      }
+      .source-row input[type='radio'] {
+        flex: 0 0 auto;
+        margin: 0;
+      }
+      .source-row > label {
+        margin: 0;
+        font-weight: 600;
+      }
+      .source-row + .source-input {
+        margin-bottom: 1rem;
+      }
+      .source-input small {
+        display: block;
+        margin-top: 0.25rem;
+        opacity: 0.75;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>uww.js demo</h1>
+    <p>
+      In-browser microWakeWord detection. Provide a wake-word source — a
+      manifest URL (the same kind ESPHome's <code>micro_wake_word</code>
+      uses) or local files — and click Start.
+    </p>
+
+    <fieldset>
+      <legend>Wake-word source</legend>
+
+      <div class="source-row">
+        <input type="radio" id="src-url" name="src" value="url" checked />
+        <label for="src-url">Manifest URL</label>
+      </div>
+      <div class="source-input">
+        <input
+          id="manifest-url"
+          type="url"
+          placeholder="https://example.com/wake_word.json"
+          value="https://cdn.jsdelivr.net/gh/esphome/micro-wake-word-models@main/models/v2/hey_jarvis.json"
+        />
+        <small>
+          Try
+          <a
+            href="https://github.com/esphome/micro-wake-word-models/tree/main/models/v2"
+            target="_blank"
+            rel="noopener"
+            >esphome/micro-wake-word-models</a
+          >
+          for ready-to-use manifests.
+        </small>
+      </div>
+
+      <div class="source-row">
+        <input type="radio" id="src-files" name="src" value="files" />
+        <label for="src-files">Local files (.json + .tflite, or just .tflite)</label>
+      </div>
+      <div class="source-input">
+        <input id="files" type="file" accept=".json,.tflite" multiple disabled />
+        <small>
+          Drop the manifest JSON and its <code>.tflite</code> together.
+          Just the <code>.tflite</code> alone also works (defaults are
+          used for threshold and sliding window).
+        </small>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Detection (leave blank to use manifest values)</legend>
+      <div class="row">
+        <div>
+          <label for="threshold">Threshold</label>
+          <input id="threshold" type="number" min="0" max="1" step="0.05" placeholder="from manifest" />
+        </div>
+        <div>
+          <label for="window">Sliding window</label>
+          <input id="window" type="number" min="1" max="50" step="1" placeholder="from manifest" />
+        </div>
+        <div>
+          <label for="refractory">Refractory (ms)</label>
+          <input id="refractory" type="number" min="0" step="100" value="2000" />
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="row" style="margin-bottom: 1rem">
+      <button id="start">Start listening</button>
+      <button id="stop" class="secondary" disabled>Stop</button>
+    </div>
+
+    <fieldset>
+      <legend>
+        Live probability — status: <span id="status">idle</span>
+        <span id="ww-name" style="margin-left: 0.5rem; opacity: 0.7"></span>
+      </legend>
+      <div class="meter" id="meter">
+        <div class="bar"></div>
+        <div class="threshold" style="left: 70%"></div>
+      </div>
+      <p>
+        Wake count: <strong id="wakeCount">0</strong> · Last probability:
+        <strong id="probValue">0.000</strong>
+      </p>
+      <pre id="debug" style="font-family: ui-monospace, Menlo, monospace; font-size: 0.75rem; opacity: 0.8; white-space: pre-wrap; word-break: break-all; margin: 0;"></pre>
+    </fieldset>
+
+    <fieldset>
+      <legend>Log</legend>
+      <div id="log"></div>
+    </fieldset>
+
+    <script type="module" src="./demo.ts"></script>
+  </body>
+</html>

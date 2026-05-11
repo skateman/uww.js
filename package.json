@@ -1,0 +1,66 @@
+{
+  "name": "uww",
+  "version": "0.1.0",
+  "description": "In-browser microWakeWord detection. Loads .tflite models, captures the microphone, and emits wake-word events.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skateman/uww.js.git"
+  },
+  "homepage": "https://github.com/skateman/uww.js#readme",
+  "bugs": {
+    "url": "https://github.com/skateman/uww.js/issues"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "src/_wasm/upstream-version.txt",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:wasm": "node scripts/build-wasm.mjs",
+    "ensure:wasm": "test -f src/_wasm/uww-frontend.js || npm run build:wasm",
+    "prebuild": "npm run ensure:wasm",
+    "pretypecheck": "npm run ensure:wasm",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "demo": "vite examples",
+    "prepublishOnly": "npm run build:wasm && npm run build"
+  },
+  "keywords": [
+    "wake-word",
+    "microwakeword",
+    "tflite",
+    "voice",
+    "home-assistant",
+    "audio",
+    "browser"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "@tensorflow/tfjs-backend-cpu": "^4.9.0",
+    "@tensorflow/tfjs-core": "4.9.0",
+    "@tensorflow/tfjs-tflite": "^0.0.1-alpha.10"
+  },
+  "devDependencies": {
+    "@tensorflow/tfjs-backend-cpu": "^4.9.0",
+    "@tensorflow/tfjs-core": "4.9.0",
+    "@tensorflow/tfjs-tflite": "^0.0.1-alpha.10",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.0"
+  }
+}
