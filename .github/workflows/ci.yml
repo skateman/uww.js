@@ -85,10 +85,15 @@ jobs:
       # Which upstream pymicro-features release we built against is
       # logged in the CI output and shipped inside the package as
       # src/_wasm/upstream-version.txt.
+      #
+      # Auth: npm trusted publishing via OIDC. The `id-token: write`
+      # permission above lets the npm CLI exchange a short-lived GitHub
+      # OIDC token for a one-shot npm publish credential — no NPM_TOKEN
+      # secret required. Configured at https://www.npmjs.com on the
+      # uww.js package's "Trusted Publisher" settings.
       - if: steps.check.outputs.publish == 'true'
         run: |
           npm publish --provenance --access public
           echo "::notice::Published $(node -p \"require('./package.json').name + '@' + require('./package.json').version\") built against pymicro-features v$(cat src/_wasm/upstream-version.txt)"
         env:
           EMSCRIPTEN_IMAGE: emscripten/emsdk:latest
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
