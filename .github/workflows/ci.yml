@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main]
 
+# Opt JavaScript actions (checkout, setup-node, etc.) into Node.js 24
+# ahead of the June 2026 default switch. Lets us keep using
+# actions/*@v4 without the deprecation warnings.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   # Runs on every push and PR. Builds the WASM, typechecks, bundles,
   # and smoke-tests the WASM in Node. No publishing.
