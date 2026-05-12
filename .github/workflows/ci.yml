@@ -100,6 +100,9 @@ jobs:
       - if: steps.check.outputs.publish == 'true'
         run: |
           npm publish --provenance --access public
-          echo "::notice::Published $(node -p \"require('./package.json').name + '@' + require('./package.json').version\") built against pymicro-features v$(cat src/_wasm/upstream-version.txt)"
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          PMF=$(cat src/_wasm/upstream-version.txt)
+          echo "::notice::Published ${NAME}@${VERSION} built against pymicro-features v${PMF}"
         env:
           EMSCRIPTEN_IMAGE: emscripten/emsdk:latest
