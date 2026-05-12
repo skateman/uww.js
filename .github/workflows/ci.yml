@@ -62,7 +62,12 @@ jobs:
         run: |
           BASE=$(node -p "require('./package.json').version")
           echo "Local version: $BASE"
-          if npm view "uww@${BASE}" version --json 2>/dev/null | grep -q '.'; then
+          # `npm view <pkg>@<ver> version` (no --json) prints the version
+          # string on stdout for existing versions, empty for nonexistent.
+          # Avoid --json: it writes the error JSON to stdout on 404 with
+          # exit 0, which makes simple "non-empty" checks misfire.
+          REMOTE=$(npm view "uww@${BASE}" version 2>/dev/null || true)
+          if [ -n "$REMOTE" ]; then
             echo "::notice::Version $BASE already on npm — skipping publish"
             echo "publish=false" >> "$GITHUB_OUTPUT"
           else
