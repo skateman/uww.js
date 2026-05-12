@@ -9,5 +9,5 @@ export default defineConfig({
   treeshake: true,
   target: 'es2022',
   platform: 'browser',
-  external: ['@tensorflow/tfjs-core', '@tensorflow/tfjs-tflite'],
+  external: ['@tensorflow/tfjs-core', '@tensorflow/tfjs-backend-cpu', '@tensorflow/tfjs-tflite'],
 });
