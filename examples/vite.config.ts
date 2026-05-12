@@ -7,7 +7,7 @@ const TFLITE_WASM_CDN =
 export default defineConfig({
   resolve: {
     alias: {
-      uww: fileURLToPath(new URL('../src/index.ts', import.meta.url)),
+      'uww.js': fileURLToPath(new URL('../src/index.ts', import.meta.url)),
       // tfjs-tflite ships a broken `module` entry that imports a non-existent
       // file. The FESM bundle is the only usable ES module in the package.
       '@tensorflow/tfjs-tflite': fileURLToPath(

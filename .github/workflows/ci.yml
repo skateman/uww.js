@@ -66,7 +66,7 @@ jobs:
           # string on stdout for existing versions, empty for nonexistent.
           # Avoid --json: it writes the error JSON to stdout on 404 with
           # exit 0, which makes simple "non-empty" checks misfire.
-          REMOTE=$(npm view "uww@${BASE}" version 2>/dev/null || true)
+          REMOTE=$(npm view "uww.js@${BASE}" version 2>/dev/null || true)
           if [ -n "$REMOTE" ]; then
             echo "::notice::Version $BASE already on npm — skipping publish"
             echo "publish=false" >> "$GITHUB_OUTPUT"

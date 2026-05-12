@@ -1,5 +1,5 @@
 {
-  "name": "uww",
+  "name": "uww.js",
   "version": "0.1.0",
   "description": "In-browser microWakeWord detection. Loads .tflite models, captures the microphone, and emits wake-word events.",
   "type": "module",

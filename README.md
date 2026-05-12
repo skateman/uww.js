@@ -16,7 +16,7 @@ events.
 ## Install
 
 ```bash
-npm install uww \
+npm install uww.js \
   @tensorflow/tfjs-core \
   @tensorflow/tfjs-backend-cpu \
   @tensorflow/tfjs-tflite
@@ -25,13 +25,13 @@ npm install uww \
 The three `@tensorflow/*` packages are peer dependencies so you
 control their versions. `tfjs-core` must be exactly `4.9.0` (matching
 the `tfjs-tflite` peer requirement). The audio frontend is bundled
-inside `uww` itself (~40 KB of WASM, embedded as base64) — no separate
+inside `uww.js` itself (~40 KB of WASM, embedded as base64) — no separate
 file or CDN.
 
 ## Quick start
 
 ```ts
-import { UWW } from 'uww';
+import { UWW } from 'uww.js';
 
 const uww = new UWW({
   // Same manifest format ESPHome's micro_wake_word reads.

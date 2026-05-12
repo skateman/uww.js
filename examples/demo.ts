@@ -1,4 +1,4 @@
-import { UWW, validateManifest, type WakeWordSource } from 'uww';
+import { UWW, validateManifest, type WakeWordSource } from 'uww.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T;
